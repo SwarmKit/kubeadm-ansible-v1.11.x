@@ -1,0 +1,49 @@
+# 安裝kube-master
+---
+- name: clear crictl file
+  file:
+    path=/usr/bin/crictl
+    state=absent
+
+- name: 創建 /etc/kubernetes/pki 文件夾
+  file:
+    path=/etc/kubernetes/{{item}}
+    state=directory
+    mode=0644
+  with_items:
+  - pki
+
+- name: clean node
+  shell: 'kubeadm reset -f'
+
+- name: 生成 kubeadm配置文件
+  template: 'src={{ item.src }} dest={{ item.dest }} mode=0644'
+  with_items:
+    - {src: 'kubeadm.yaml.j2' , dest: '/root/kubeadm.yaml'}
+    - {src: 'kube-flannel.yml.j2' , dest: '/root/kube-flannel.yml'}
+
+- name: Master01 節點初始化
+  shell: 'cd /root/ && {{ item }}'
+  with_items:
+    - kubeadm init --config /root/kubeadm.yaml
+    - rm -rf ~/.kube && mkdir ~/.kube && cp /etc/kubernetes/admin.conf ~/.kube/config
+    - kubectl taint nodes --all node-role.kubernetes.io/master-
+  when: ( order is defined ) and ( order == 1 )
+
+- name: 複製PKI 文件到Ansible主機
+  fetch: 'src=/etc/kubernetes/pki/{{ item }} dest=/tmp/ mode=0644 flat=yes'
+  with_items: '{{ KUBE_CRTS }}'
+  when: ( order is defined ) and ( order == 1 )
+
+- name: 發送PKI文件到另外一台主機
+  copy: 'src=/tmp/{{ item }} dest=/etc/kubernetes/pki/{{ item }} mode=0644'
+  with_items: '{{ KUBE_CRTS }}'
+  when: ( order is defined ) and ( order != 1 )
+
+- name: Master02 節點初始化
+  shell: 'cd /root/ && {{ item }}'
+  with_items:
+      - kubeadm init --config /root/kubeadm.yaml
+      - kubectl taint nodes --all node-role.kubernetes.io/master- || true
+      - rm -rf ~/.kube && mkdir ~/.kube && cp /etc/kubernetes/admin.conf ~/.kube/config
+  when: ( order is defined ) and ( order != 1 )

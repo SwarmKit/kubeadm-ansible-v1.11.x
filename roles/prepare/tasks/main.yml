@@ -1,0 +1,82 @@
+- name: 禁用系統 swap
+  shell: "swapoff -a && sysctl -w vm.swappiness=0"
+  ignore_errors: true
+
+- name: 刪除 fstab swap相關配置
+  lineinfile:
+    dest: /etc/fstab
+    regexp: 'swap'
+    state: absent
+    backup: 'yes'
+
+- name: 加載内核 br_netfilter,ip_vs,nf_conntrack 模塊
+  copy: src={{ item }} dest=/etc/modules-load.d/{{ item }} mode=0644
+  with_items:
+  - br_netfilter.conf
+  - nf_conntrack.conf
+  - ip_vs.conf
+
+- name: 臨時刪除系統 repofiles文件
+  file: path=/etc/yum.repos.d state=absent
+  
+- name: 創建系統repofiles文件夾
+  file: path=/etc/yum.repos.d state=directory
+
+- name: 添加 CentOS,epel,kubeadm repofiles
+  template: src={{ item.src }} dest=/etc/yum.repos.d/{{ item.dst }}
+  with_items:
+  - { src: 'CentOS-Base-local.repo.j2', dst: 'CentOS-Base-local.repo' }
+  - { src: 'epel.repo.j2', dst: 'epel.repo' }
+  - { src: 'kubeadm.repo.j2', dst: 'kubeadm.repo' }
+ 
+- name: 修改系統内核參數
+  template: src={{ item.src }} dest={{ item.dst }}
+  with_items:
+  - { src: '95-k8s-sysctl.conf.j2', dst: '/etc/sysctl.conf' }
+  - { src: '30-k8s-ulimit.conf.j2', dst: '/etc/security/limits.d/k8s-ulimit.conf' }
+  - { src: '99-k8s_profile.sh.j2', dst: '/etc/profile.d/k8s_profile.sh' }
+  
+- name: 刪除 CentOS 默認安裝
+  yum:
+    name:
+      - firewalld
+      - python-firewall
+      - firewalld-filesystem
+    state: absent
+
+- name: 安裝系統基礎軟件包
+  yum:
+    name:
+      - conntrack-tools
+      - psmisc
+      - nfs-utils
+      - jq
+      - socat
+      - bash-completion
+      - rsync
+      - ipset
+      - ipvsadm
+      - chrony
+      - kubelet 
+      - kubeadm 
+      - kubectl
+    state: latest
+
+- name: 複製時間同步配置文件chrony.conf
+  template: src=chrony.conf.j2 dest=/etc/chrony.conf
+
+- name: 啟動chronyd,kubelet服務
+  service: name={{ item }} state=restarted enabled=yes
+  with_items:
+  - chronyd
+  - kubelet
+
+- name: 臨時關閉 SELINUX
+  shell: "setenforce 0"
+  failed_when: false
+
+- name: 永久關閉 SELINUX
+  lineinfile:
+    dest: /etc/selinux/config
+    regexp: "^SELINUX="
+    line: "SELINUX=disabled"

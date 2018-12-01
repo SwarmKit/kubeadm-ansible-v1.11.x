@@ -1,0 +1,16 @@
+# 準備集群所需的所有二進制文件（cfssl/etcd/flannel/kubernetes）
+---
+- name: 刪除 /opt/kubernetes/data 文件夾
+  file: path=/opt/kubernetes state=absent
+
+- name: 創建 /opt/kubernetes/data 文件夾
+  file: path=/opt/kubernetes/data/{{item}} state=directory mode=0644
+  with_items:
+  - cfssl
+  - flannel
+
+- name: 下載並解壓 ETCD {{ETCD_URL}} 二進制安裝包
+  unarchive: src={{ETCD_URL}} dest={{DATA_DIR}} remote_src=yes
+ 
+- name: 下載並解壓 DOCKER {{DOCKER_URL}} 二進制安裝包
+  unarchive: src={{DOCKER_URL}} dest={{DATA_DIR}} remote_src=yes

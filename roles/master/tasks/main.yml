@@ -1,0 +1,56 @@
+# 安裝kube-master
+---
+- name: 創建 /etc/kubernetes/pki 文件夾
+  file: path=/etc/kubernetes/{{item}} state=directory mode=0644
+  with_items:
+  - pki
+
+- name: 下載kubeadm-{{KUBE_VERSION}} images文件
+  get_url: 
+    url=http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/kubeadm-images-{{KUBE_VERSION}}.tar.gz
+    dest=/tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz
+
+- name: 導入kubeadm-{{KUBE_VERSION}} images文件
+  shell: '{{BIN_DIR}}/docker load -i /tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz'
+
+- name: clean node
+  shell: 'kubeadm reset -f'
+
+- name: 生成 kubeadm配置文件
+  template: 'src={{ item.src }} dest={{ item.dest }} mode=0644'
+  with_items:
+    - {src: 'kubeadm.yaml.j2' , dest: '/root/kubeadm.yaml'}
+    - {src: 'calico.yaml.j2' , dest: '/root/calico.yaml'}
+    - {src: 'rbac.yaml' , dest: '/root/rbac.yml'}
+
+- name: kubeadm初始化，如果失敗終止Kubernetes集群初始化
+  shell: '/usr/bin/kubeadm init --config /root/kubeadm.yaml'
+  register: info
+  failed_when: "'troubleshoot' in info.stdout_lines"
+  when: ( order is defined ) and ( order == 1 )
+
+- name: 證書壓縮打包
+  shell: 'cd /etc/kubernetes && tar czf pki-{{KUBE_VERSION}}.tgz admin.conf pki/ca.* pki/sa.* pki/front-proxy-ca.*'
+  when: ( order  is defined ) and ( order == 1 )
+
+- name: 證書上傳到Ansible temp目錄
+  fetch: src=/etc/kubernetes/pki-{{KUBE_VERSION}}.tgz dest=/tmp/pki-{{KUBE_VERSION}}.tgz flat=yes
+  when: ( order  is defined ) and ( order == 1 )
+
+- name: 複製證書到其他的節點
+  copy: src=/tmp/pki-{{KUBE_VERSION}}.tgz  dest=/etc/kubernetes/pki-{{KUBE_VERSION}}.tgz
+  when: ( order  is defined ) and ( order != 1 )
+
+- name: 解壓證書
+  shell: 'cd /etc/kubernetes/  && tar xf pki-{{KUBE_VERSION}}.tgz'
+  when: ( order is defined ) and ( order != 1 )
+
+- name: kubeadm init 其他master
+  shell: 'kubeadm init --config /root/kubeadm.yaml'
+  register: info
+  failed_when: "'troubleshoot' in info.stdout_lines "
+  when: ( order  is defined ) and  ( order != 1 )
+
+- name: 複製config文件到.kube目錄
+  shell: 'mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+  when:  order is defined
