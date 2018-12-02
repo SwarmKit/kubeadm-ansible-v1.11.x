@@ -4,7 +4,7 @@
 - name: 創建 haproxy配置目錄
   file: name=/etc/haproxy state=directory
 
-- name: 修改 CentOS hapeoxy服務文件 
+- name: 修改 CentOS haproxy服務文件 
   template: src=haproxy.service.j2 dest=/usr/lib/systemd/system/haproxy.service
   tags: restart_lb
 
