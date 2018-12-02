@@ -1,33 +1,32 @@
 [deploy]
-10.206.30.181
+192.168.1.88
 
 [etcd]
-10.206.30.169 NODE_NAME=etcd169
-10.206.30.170 NODE_NAME=etcd170
-10.206.30.171 NODE_NAME=etcd171
-10.206.30.172 NODE_NAME=etcd172
+192.168.1.89 NODE_NAME=etcd89
+192.168.1.90 NODE_NAME=etcd90
+192.168.1.91 NODE_NAME=etcd91
+192.168.1.92 NODE_NAME=etcd92
 
 [lb]
-10.206.30.169 LB_IF="eth0" LB_ROLE=master
-10.206.30.170 LB_IF="eth0" LB_ROLE=backup
+192.168.1.89 LB_IF="ens33" LB_ROLE=master
+192.168.1.90 LB_IF="ens33" LB_ROLE=backup
 
 [kube:children]
 kube-master
 kube-node
 
 [kube-master]
-10.206.30.169 order=1
-10.206.30.170 order=2
+192.168.1.89 order=1 KUBE_NAME=kube-m01
+192.168.1.90 order=2 KUBE_NAME=kube-m02
 
 [kube-node]
-10.206.30.171
-10.206.30.172
-
-[new-master]
+192.168.1.91 KUBE_NAME=kube-s01
+192.168.1.92 KUBE_NAME=kube-s02
 
 [new-node]
 
+[new-master]
+
 [kube:vars]
 ansible_ssh_user="root"
-ansible_ssh_pass="ipebg@8899"
-
+ansible_ssh_pass="cisco,,1989"

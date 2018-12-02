@@ -5,28 +5,28 @@ BIN_DIR: /opt/kubernetes/bin
 DATA_DIR: /opt/kubernetes/data
 
 # cfssl配置
-CFSSL_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl_linux-amd64"
-CFSSLJSON_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssljson_linux-amd64"
-CFSSLCERTINFO_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/cfssl-certinfo_linux-amd64"
+CFSSL_URL: "http://192.168.1.88/cfssl_linux-amd64"
+CFSSLJSON_URL: "http://192.168.1.88/cfssljson_linux-amd64"
+CFSSLCERTINFO_URL: "http://192.168.1.88/cfssl-certinfo_linux-amd64"
 CFSSL_DIR: "{{DATA_DIR}}/cfssl"
 
 CA_DIR: "{{DATA_DIR}}/ca"
 
 # etcd配置(需要與ansible inventory檔內容同步)
 
-ETCD_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/etcd-v3.3.7-linux-amd64.tar.gz"
-ETCD_DIR: "{{DATA_DIR}}/etcd-v3.3.7-linux-amd64"
+ETCD_URL: "http://192.168.1.88/etcd-v3.3.10-linux-amd64.tar.gz"
+ETCD_DIR: "{{DATA_DIR}}/etcd-v3.3.10-linux-amd64"
 
 # docker配置
-#DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-18.03.1-ce.tgz"
-DOCKER_URL: "http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/docker-17.03.2-ce.tgz"
+#DOCKER_URL: "http://192.168.1.88/docker-18.03.1-ce.tgz"
+DOCKER_URL: "http://192.168.1.88/docker-17.03.2-ce.tgz"
 DOCKER_DIR: "{{DATA_DIR}}/docker"
 
 # kubeadm 相关的RPM包
 KUBE_VERSION: v1.11.4
 
 # Kubernetes 配置
-MASTER_IP: 10.206.30.199
+MASTER_IP: 192.168.1.100
 
 # 集群Master IP
 KUBE_APISERVER: https://{{MASTER_IP}}:8443

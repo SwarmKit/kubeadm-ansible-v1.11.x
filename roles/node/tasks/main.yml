@@ -1,23 +1,20 @@
 # 安裝kube-node
----
-- name: clean node
-  shell: kubeadm reset -f
-  when: ( role is defined ) and ( role == 'node' )
+# ---
+- name: 下載kubeadm-{{KUBE_VERSION}} images文件
+  get_url:
+    url=http://192.168.1.88/kubeadm-images-{{KUBE_VERSION}}.tar.gz
+    dest=/tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz
 
-- name: clear crictl file
-  file:
-    path=/usr/bin/crictl
-    state=absent
+- name: 導入kubeadm-{{KUBE_VERSION}} images文件
+  shell: '{{BIN_DIR}}/docker load -i /tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz'
 
-- name: kubeadm  token
-  shell: kubeadm token create --print-join-command
+- name: 獲取加入集群 token命令
+  shell: 'kubeadm token create --print-join-command'
   register: k8s_token
-  when: ( order is defined ) and ( order == 1 )
+  delegate_to: "{{ groups['kube-master'][0] }}"
 
-- name: 设置变量k8s_token为set_fact
-  set_fact: k8s_token={{ k8s_token.stdout }}
-  when: ( order is defined ) and ( order == 1 )
+- name: 複製加入集群執行脚本
+  template: src=cluster.join.sh.j2 dest=/tmp/cluster.join.sh mode=0755
 
-- name: add node to k8s cluster
-  shell: echo '' |  {{ hostvars[groups['kube-master'][0]]['k8s_token'] }}
-  when:  order  is undefined
+- name: 加入現有集群
+  shell: "sh /tmp/cluster.join.sh"

@@ -1,13 +1,14 @@
 # 安裝kube-master
 ---
 - name: 創建 /etc/kubernetes/pki 文件夾
-  file: path=/etc/kubernetes/{{item}} state=directory mode=0644
+  file: path={{item}} state=directory mode=0644
   with_items:
-  - pki
+  - /etc/kubernetes/pki
+  - /root/.kube
 
 - name: 下載kubeadm-{{KUBE_VERSION}} images文件
   get_url: 
-    url=http://mirror.ipebg.efoxconn.com/opensource/kubernetes-ansible/tools/kubeadm-images-{{KUBE_VERSION}}.tar.gz
+    url=http://192.168.1.88/kubeadm-images-{{KUBE_VERSION}}.tar.gz
     dest=/tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz
 
 - name: 導入kubeadm-{{KUBE_VERSION}} images文件
@@ -52,5 +53,5 @@
   when: ( order  is defined ) and  ( order != 1 )
 
 - name: 複製config文件到.kube目錄
-  shell: 'mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+  shell: 'sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
   when:  order is defined
