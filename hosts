@@ -23,6 +23,8 @@ kube-node
 10.206.30.171
 10.206.30.172
 
+[new-master]
+
 [new-node]
 
 [kube:vars]
