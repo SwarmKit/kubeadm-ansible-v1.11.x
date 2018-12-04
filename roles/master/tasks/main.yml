@@ -8,7 +8,7 @@
 
 - name: 下載kubeadm-{{KUBE_VERSION}} images文件
   get_url: 
-    url=http://192.168.1.88/kubeadm-images-{{KUBE_VERSION}}.tar.gz
+    url={{ KUBE_IMAGE_URL }}
     dest=/tmp/kubeadm-images-{{KUBE_VERSION}}.tar.gz
 
 - name: 導入kubeadm-{{KUBE_VERSION}} images文件
@@ -22,7 +22,8 @@
   with_items:
     - {src: 'kubeadm.yaml.j2' , dest: '/root/kubeadm.yaml'}
     - {src: 'calico.yaml.j2' , dest: '/root/calico.yaml'}
-    - {src: 'rbac.yaml' , dest: '/root/rbac.yml'}
+    - {src: 'rbac.yaml.j2' , dest: '/root/rbac.yml'}
+    - {src: 'coredns.yaml.j2' , dest: '/root/coredns.yaml'}
 
 - name: kubeadm初始化，如果失敗終止Kubernetes集群初始化
   shell: '/usr/bin/kubeadm init --config /root/kubeadm.yaml'
@@ -53,5 +54,5 @@
   when: ( order  is defined ) and  ( order != 1 )
 
 - name: 複製config文件到.kube目錄
-  shell: 'sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+  shell: 'cp -i /etc/kubernetes/admin.conf /root/.kube/config && chown $(id -u):$(id -g) /root/.kube/config'
   when:  order is defined

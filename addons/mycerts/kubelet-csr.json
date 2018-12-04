@@ -1,0 +1,30 @@
+{
+  "CN": "kubernetes",
+  "hosts": [
+    "127.0.0.1",
+    "kubeadm-m01",
+    "kubeadm-m02",
+    "kubeadm-s01",
+    "kubeadm-s02",
+    "10.206.30.169",
+    "10.206.30.170",
+    "10.206.30.171",
+    "10.206.30.172",
+    "kubernetes",
+    "kubernetes.default",
+    "kubernetes.default.svc",
+    "kubernetes.default.svc.cluster",
+    "kubernetes.default.svc.cluster.local"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [{
+    "C": "US",
+    "ST": "NY",
+    "L": "City",
+    "O": "Org",
+    "OU": "Unit"
+  }]
+}
